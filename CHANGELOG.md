@@ -1,16 +1,16 @@
 # Changelog
 
-## [Unreleased](https://github.com/celemas/container/compare/0.4.0...HEAD)
+## [Unreleased](https://codeberg.org/celemas/container/compare/0.4.0...HEAD)
 
 No notable changes since the last release.
 
-## [0.4.0](https://github.com/celemas/container/releases/tag/0.4.0) (2026-05-12)
+## [0.4.0](https://codeberg.org/celemas/container/src/tag/0.4.0) (2026-05-12)
 
 ### Breaking Changes
 
 - Rename package metadata, root namespace, repository URLs, homepage, and author info.
 
-## [0.3.0](https://github.com/celemas/container/releases/tag/0.3.0) (2026-04-26)
+## [0.3.0](https://codeberg.org/celemas/container/src/tag/0.3.0) (2026-04-26)
 
 ### Breaking
 
@@ -33,7 +33,7 @@ No notable changes since the last release.
 - Scope tags now layer over matching root tags and keep scope-local caches.
 - Scope reset now clears local entries/caches and resets used resettable services (including scope tags).
 
-## [0.2.0](https://github.com/celemas/container/releases/tag/0.2.0) (2026-02-21)
+## [0.2.0](https://codeberg.org/celemas/container/src/tag/0.2.0) (2026-02-21)
 
 Project renamed from celemas/registry to celemas/container.
 
@@ -46,7 +46,7 @@ Codename: Jonas
 - Main class renamed from `Registry` to `Container`
 - Parameter `includeRegistry` renamed to `includeContainer`
 
-## [0.1.0](https://github.com/celemas/container/releases/tag/0.1.0) (2026-01-30)
+## [0.1.0](https://codeberg.org/celemas/container/src/tag/0.1.0) (2026-01-30)
 
 Initial release.
 
