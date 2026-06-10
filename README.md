@@ -1,11 +1,11 @@
 # Celemas Container
 
 <!-- prettier-ignore-start -->
-[![ci](https://github.com/celemas/container/actions/workflows/ci.yml/badge.svg)](https://github.com/celemas/container/actions)
-[![codecov](https://codecov.io/github/celemas/container/graph/badge.svg?token=2KNQOB4PND)](https://codecov.io/github/celemas/container)
-[![psalm coverage](https://shepherd.dev/github/celemas/container/coverage.svg?)](https://shepherd.dev/github/celemas/container)
-[![psalm level](https://shepherd.dev/github/celemas/container/level.svg?)](https://shepherd.dev/github/celemas/container)
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE.md)
+[![ci](https://codeberg.org/celemas/container/badges/workflows/ci.yml/badge.svg?style=flat&logo=codeberg&logoColor=white&label=ci)](https://codeberg.org/celemas/container/actions)
+[![code coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fcontainer%2Fcode%2Fbadge.json)](https://cov.celemas.dev/celemas/container/code)
+[![type coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fcontainer%2Ftypes%2Fbadge-cover.json)](https://cov.celemas.dev/celemas/container/types)
+[![psalm level](https://img.shields.io/endpoint?url=https%3A%2F%2Fcov.celemas.dev%2Fcelemas%2Fcontainer%2Ftypes%2Fbadge-level.json)](https://cov.celemas.dev/celemas/container/types)
+[![Software License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 <!-- prettier-ignore-end -->
 
 A PSR-11 compatible dependency injection container.
