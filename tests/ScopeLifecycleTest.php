@@ -143,6 +143,47 @@ final class ScopeLifecycleTest extends TestCase
 		$container->get(ResettableService::class);
 	}
 
+	public function testSealedRootRejectsScopedEntriesResolvedDuringBoot(): void
+	{
+		$container = new Container();
+		$container->add(ResettableService::class)->scoped();
+		$bootService = $container->get(ResettableService::class);
+		$scope = $container->scope();
+		$service = $scope->get(ResettableService::class);
+
+		$this->assertNotSame($bootService, $service);
+		$this->assertSame($service, $scope->get(ResettableService::class));
+		$this->throws(ContainerException::class, 'cannot be resolved by the root container');
+		$container->get(ResettableService::class);
+	}
+
+	public function testSharedEntryCannotCaptureScopedDependencyResolvedDuringBoot(): void
+	{
+		$container = new Container();
+		$container->add(ResettableService::class)->scoped();
+		$container->add(ResettableConsumer::class);
+		$container->get(ResettableService::class);
+		$scope = $container->scope();
+
+		$this->throws(ContainerException::class, 'cannot be resolved by the root container');
+		$scope->get(ResettableConsumer::class);
+	}
+
+	public function testSealedRootTagRejectsScopedEntriesResolvedDuringBoot(): void
+	{
+		$container = new Container();
+		$tag = $container->tag('api');
+		$tag->add(ResettableService::class)->scoped();
+		$bootService = $tag->get(ResettableService::class);
+		$scopeTag = $container->scope()->tag('api');
+		$service = $scopeTag->get(ResettableService::class);
+
+		$this->assertNotSame($bootService, $service);
+		$this->assertSame($service, $scopeTag->get(ResettableService::class));
+		$this->throws(ContainerException::class, 'cannot be resolved by the root container');
+		$tag->get(ResettableService::class);
+	}
+
 	public function testResetAttemptsEveryHookAndClearsTheScope(): void
 	{
 		$container = new Container();

@@ -50,6 +50,7 @@ Lifetimes across scopes:
 - Shared entries of the root live as long as the root, so they must not keep per-scope state. They resolve their dependencies in the root's context.
 - Scoped entries get one instance per scope and resolve their dependencies in that scope, so scope-local entries are visible to them.
 - A scoped entry cannot be resolved by the sealed root. That usually means a shared entry depends on it, which would keep the first instance for all later scopes; the container throws a `ContainerException` instead. Make the consumer scoped or transient, or resolve the entry from a scope.
+- Resolve scoped entries only from a scope. Scoped instances the root created before the first `scope()` call are dropped when it seals, but a shared entry resolved before that call keeps the scoped instances it received, for every later scope; the container cannot detect that.
 - A prebuilt object (`$root->add('id', $object)`) is always shared. Register a class name or a closure for a scoped or transient lifetime.
 
 Tags work the same way inside a scope: `$scope->tag('name')` lists the root tag's registrations plus its own, keeps its own scoped instances, and resolves untagged ids through the scope.

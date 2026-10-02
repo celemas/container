@@ -505,6 +505,16 @@ class Container implements PsrContainer
 	{
 		$this->sealed = true;
 
+		// Scoped entries resolved before the first scope must not outlive it:
+		// the sealed container rejects them from now on.
+		foreach ($this->entries as $id => $entry) {
+			if ($entry->getLifetime() !== Lifetime::Scoped) {
+				continue;
+			}
+
+			unset($this->instances[$id]);
+		}
+
 		foreach ($this->tags as $tagContainer) {
 			$tagContainer->seal();
 		}
