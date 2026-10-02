@@ -1,11 +1,15 @@
 # Changelog
 
-## [Unreleased](https://codefloe.com/celema/container/compare/0.5.1...HEAD)
+## [Unreleased](https://codefloe.com/celema/container/compare/0.6.0...HEAD)
+
+No notable changes since the last release.
+
+## [0.6.0](https://codefloe.com/celema/container/src/tag/0.6.0) (2026-10-02)
 
 ### Breaking Changes
 
 - Require `celema/wire` 0.8. Entries are built with `Creator::create()`, and `Container` no longer implements the removed `WireContainer` interface; `Container::definition()` is removed (use `entry($id)->definition()`).
-- Resolving a scoped entry on the sealed root throws a `ContainerException`. This turns a scoped dependency of a shared entry, which silently kept the first instance for all later scopes, into an error.
+- Resolving a scoped entry on the sealed root throws a `ContainerException`. This turns a scoped dependency of a shared entry, which silently kept the first instance for all later scopes, into an error. Scoped instances the root created before the first `scope()` call are dropped when it seals.
 - Setting a scoped or transient lifetime on a prebuilt object entry throws, as the object cannot be recreated.
 - `reset()` attempts every reset hook and clears the scope even if hooks fail, then throws `Exception\ResetFailed` listing all failures. Previously the first failing hook aborted the reset and left the scope's instances and entries in place.
 
