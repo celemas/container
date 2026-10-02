@@ -32,3 +32,4 @@ kan-defect = { enabled = false }
 cyclomatic-complexity = { enabled = false }
 halstead = { enabled = false }
 no-boolean-flag-parameter = { enabled = false }
+prefer-early-continue = { enabled = false }
