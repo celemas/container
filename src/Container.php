@@ -6,10 +6,10 @@ namespace Celema\Container;
 
 use Celema\Container\Exception\ContainerException;
 use Celema\Container\Exception\NotFoundException;
+use Celema\Container\Exception\ResetFailed;
 use Celema\Wire\CallableResolver;
 use Celema\Wire\Creator;
 use Celema\Wire\Exception\WireException;
-use Celema\Wire\WireContainer;
 use Closure;
 use Override;
 use Psr\Container\ContainerExceptionInterface;
@@ -17,7 +17,7 @@ use Psr\Container\ContainerInterface as PsrContainer;
 use Throwable;
 
 /** @psalm-api */
-class Container implements WireContainer
+class Container implements PsrContainer
 {
 	protected Creator $creator;
 	protected readonly ?PsrContainer $wrappedContainer;
@@ -34,6 +34,9 @@ class Container implements WireContainer
 
 	/** @var array<int, Resettable> */
 	protected array $usedResettables = [];
+
+	/** The root tag whose registrations a scope's tag container lists and resolves. */
+	protected ?Container $inherits = null;
 
 	public function __construct(
 		public readonly bool $autowire = true,
@@ -76,7 +79,12 @@ class Container implements WireContainer
 		}
 
 		$resetIds = [];
-		$this->resetScope($resetIds);
+		$failures = [];
+		$this->resetScope($resetIds, $failures);
+
+		if ($failures !== []) {
+			throw new ResetFailed($failures);
+		}
 	}
 
 	#[Override]
@@ -84,6 +92,7 @@ class Container implements WireContainer
 	{
 		return (
 			isset($this->entries[$id])
+				|| isset($this->inherits?->entries[$id])
 				|| $this->parent?->has($id)
 				|| $this->wrappedContainer?->has($id)
 		);
@@ -92,7 +101,7 @@ class Container implements WireContainer
 	/** @return list<string> */
 	public function entries(bool $includeContainer = false): array
 	{
-		$inherited = $this->taggedParent()?->entries(true) ?? [];
+		$inherited = $this->inherits?->entries(true) ?? [];
 		$keys = $inherited === []
 			? array_keys($this->entries)
 			: array_values(array_unique([...array_keys($this->entries), ...$inherited]));
@@ -109,19 +118,11 @@ class Container implements WireContainer
 
 	public function entry(string $id): Entry
 	{
-		$entry = $this->entries[$id] ?? null;
-
-		if ($entry !== null) {
-			return $entry;
-		}
-
-		$parent = $this->taggedParent();
-
-		if ($parent !== null) {
-			return $parent->entry($id);
-		}
-
-		throw new NotFoundException('Unresolvable entry - id: ' . $id);
+		return (
+			$this->entries[$id]
+				?? $this->inherits?->entries[$id]
+				?? throw new NotFoundException('Unresolvable entry - id: ' . $id)
+		);
 	}
 
 	#[Override]
@@ -143,6 +144,13 @@ class Container implements WireContainer
 						requester: $this,
 					),
 				);
+			}
+
+			if ($this->tag !== '' && $this->parent !== null) {
+				// Ids that were not tagged belong to the container that owns the
+				// tag. Resolving them there keeps their lifetime caches and the
+				// overrides of an enclosing scope.
+				return $this->parent->get($id);
 			}
 
 			$wrappedContainer = $this->root()->wrappedContainer;
@@ -170,19 +178,6 @@ class Container implements WireContainer
 		}
 
 		throw new NotFoundException('Unresolvable id: ' . $id);
-	}
-
-	#[Override]
-	public function definition(string $id): mixed
-	{
-		$resolved = $this->findEntry($id);
-		$entry = $resolved[1] ?? null;
-
-		if ($entry !== null) {
-			return $entry->definition();
-		}
-
-		throw new NotFoundException('Unresolvable definition - id: ' . $id);
 	}
 
 	/**
@@ -217,27 +212,29 @@ class Container implements WireContainer
 			return $this->tags[$tag];
 		}
 
-		if ($this->isRoot() && $this->sealed) {
-			throw new ContainerException('The root container is sealed after scope() was called');
+		if ($this->sealed) {
+			// Reading a tag that was never registered is not a structural change.
+			// The empty view is not stored, so the sealed container stays as it is.
+			$view = new self(autowire: $this->autowire, tag: $tag, parent: $this);
+			$view->seal();
+
+			return $view;
 		}
 
-		$parent = $this;
-		$isScope = false;
-
-		if ($this->isScope) {
-			$root = $this->root();
-			$parent = $root->tags[$tag] ?? $root;
-			$isScope = true;
-		}
-
-		$this->tags[$tag] = new self(
+		$tagContainer = new self(
 			autowire: $this->autowire,
 			tag: $tag,
-			parent: $parent,
-			isScope: $isScope,
+			parent: $this,
+			isScope: $this->isScope,
 		);
 
-		return $this->tags[$tag];
+		// A scope's tag lists the root tag's registrations and adds its own,
+		// while untagged ids resolve through the scope.
+		if ($this->isScope) {
+			$tagContainer->inherits = $this->root()->tags[$tag] ?? null;
+		}
+
+		return $this->tags[$tag] = $tagContainer;
 	}
 
 	public function new(string $id, mixed ...$args): object
@@ -276,6 +273,14 @@ class Container implements WireContainer
 	): mixed {
 		if ($entry->shouldReturnValue()) {
 			return $entry->definition();
+		}
+
+		if ($entry->getLifetime() === Lifetime::Scoped && !$requester->isScope && $requester->sealed) {
+			throw new ContainerException(
+				"Scoped entry '{$id}' cannot be resolved by the root container after scope() was called, "
+					. 'as every scope would share that instance. It is most likely a dependency of a shared '
+					. 'entry: make that entry scoped or transient, or resolve the entry from a scope.',
+			);
 		}
 
 		[$cacheContainer, $resolutionContext] = $this->resolutionContainers(
@@ -389,18 +394,22 @@ class Container implements WireContainer
 	}
 
 	/**
+	 * Attempts every reset hook and clears the scope even if hooks fail; the
+	 * failures are collected for the caller.
+	 *
 	 * @param array<int, true> $resetIds
+	 * @param list<Throwable> $failures
 	 */
-	protected function resetScope(array &$resetIds): void
+	protected function resetScope(array &$resetIds, array &$failures): void
 	{
 		// $instances stores mixed values by design, so foreach assigns mixed to $instance.
 		/** @psalm-suppress MixedAssignment */
 		foreach ($this->instances as $instance) {
-			$this->resetIfNeeded($instance, $resetIds);
+			$this->resetIfNeeded($instance, $resetIds, $failures);
 		}
 
 		foreach ($this->usedResettables as $usedResettable) {
-			$this->resetIfNeeded($usedResettable, $resetIds);
+			$this->resetIfNeeded($usedResettable, $resetIds, $failures);
 		}
 
 		foreach ($this->tags as $tagContainer) {
@@ -408,7 +417,7 @@ class Container implements WireContainer
 				continue;
 			}
 
-			$tagContainer->resetScope($resetIds);
+			$tagContainer->resetScope($resetIds, $failures);
 		}
 
 		$this->instances = [];
@@ -421,8 +430,9 @@ class Container implements WireContainer
 
 	/**
 	 * @param array<int, true> $resetIds
+	 * @param list<Throwable> $failures
 	 */
-	protected function resetIfNeeded(mixed $value, array &$resetIds): void
+	protected function resetIfNeeded(mixed $value, array &$resetIds, array &$failures): void
 	{
 		if (!$value instanceof Resettable) {
 			return;
@@ -435,7 +445,12 @@ class Container implements WireContainer
 		}
 
 		$resetIds[$objectId] = true;
-		$value->reset();
+
+		try {
+			$value->reset();
+		} catch (Throwable $e) {
+			$failures[] = $e;
+		}
 	}
 
 	protected function trackAndReturn(mixed $value): mixed
@@ -456,21 +471,16 @@ class Container implements WireContainer
 			return [$this, $entry];
 		}
 
-		return $this->parent?->findEntry($id);
-	}
+		$inherits = $this->inherits;
 
-	/**
-	 * The tag container holding the registrations this one inherits.
-	 *
-	 * A scope's tag container starts out empty — tag() links it to the root's
-	 * container for the same tag, and the registrations live there. Only a
-	 * same-tag parent counts: a tag container on a non-scope container has the
-	 * owning container as its parent, and inheriting from that would list every
-	 * service in the container under the tag.
-	 */
-	protected function taggedParent(): ?Container
-	{
-		return $this->tag !== '' && $this->parent?->tag === $this->tag ? $this->parent : null;
+		if ($inherits !== null && isset($inherits->entries[$id])) {
+			// Inherited shared entries are cached by the root tag that defines them.
+			return [$inherits, $inherits->entries[$id]];
+		}
+
+		// A tag container only finds tagged entries; get() hands other ids to
+		// the container owning the tag.
+		return $this->tag === '' ? $this->parent?->findEntry($id) : null;
 	}
 
 	protected function root(): Container
@@ -498,10 +508,5 @@ class Container implements WireContainer
 		foreach ($this->tags as $tagContainer) {
 			$tagContainer->seal();
 		}
-	}
-
-	protected function isRoot(): bool
-	{
-		return $this->parent === null && $this->tag === '' && !$this->isScope;
 	}
 }

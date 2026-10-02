@@ -31,6 +31,13 @@ class Entry
 
 	public function lifetime(Lifetime $lifetime): static
 	{
+		if ($lifetime !== Lifetime::Shared && is_object($this->definition) && !$this->definition instanceof Closure) {
+			throw new ContainerException(
+				"Entry '{$this->id}' is a prebuilt object, which can only be shared. Register a class name "
+					. 'or a closure to create one instance per scope or per resolution.',
+			);
+		}
+
 		$this->lifetime = $lifetime;
 
 		return $this;

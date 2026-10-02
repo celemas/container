@@ -2,7 +2,17 @@
 
 ## [Unreleased](https://codefloe.com/celema/container/compare/0.5.1...HEAD)
 
-No notable changes since the last release.
+### Breaking Changes
+
+- Require `celema/wire` 0.8. Entries are built with `Creator::create()`, and `Container` no longer implements the removed `WireContainer` interface; `Container::definition()` is removed (use `entry($id)->definition()`).
+- Resolving a scoped entry on the sealed root throws a `ContainerException`. This turns a scoped dependency of a shared entry, which silently kept the first instance for all later scopes, into an error.
+- Setting a scoped or transient lifetime on a prebuilt object entry throws, as the object cannot be recreated.
+- `reset()` attempts every reset hook and clears the scope even if hooks fail, then throws `Exception\ResetFailed` listing all failures. Previously the first failing hook aborted the reset and left the scope's instances and entries in place.
+
+### Fixed
+
+- Tagged entries resolved through a scope see the scope's entries: a scope's tag container resolves untagged ids through the scope instead of the root, so scope-local overrides and scoped lifetimes apply. Shared tagged entries still resolve in the root's context.
+- Reading a tag that was never registered on a sealed root returns an empty, sealed tag container instead of throwing.
 
 ## [0.5.1](https://codefloe.com/celema/container/src/tag/0.5.1) (2026-08-05)
 

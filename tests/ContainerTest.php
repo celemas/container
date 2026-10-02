@@ -223,22 +223,6 @@ final class ContainerTest extends TestCase
 		$this->assertSame('chuck', $instance->test);
 	}
 
-	public function testDefinition(): void
-	{
-		$container = new Container();
-		$container->add('container', Container::class);
-
-		$this->assertSame(Container::class, $container->definition('container'));
-	}
-
-	public function testDefinitionOnTagCanResolveParentEntry(): void
-	{
-		$container = new Container();
-		$container->add('container', Container::class);
-
-		$this->assertSame(Container::class, $container->tag('api')->definition('container'));
-	}
-
 	public function testEntryOnTagFromScopeResolvesRootRegistration(): void
 	{
 		$container = new Container();
@@ -279,14 +263,6 @@ final class ContainerTest extends TestCase
 		$this->throws(NotFoundException::class, 'Unresolvable entry');
 
 		new Container()->tag('api')->entry('missing');
-	}
-
-	public function testFailingDefinition(): void
-	{
-		$this->throws(NotFoundException::class, 'Unresolvable');
-
-		$container = new Container();
-		$container->definition('container');
 	}
 
 	public function testRejectUnresolvableClass(): void
@@ -765,13 +741,31 @@ final class ContainerTest extends TestCase
 		);
 	}
 
-	public function testRootTagCreationFailsAfterFirstScope(): void
+	public function testUnknownRootTagIsAnEmptySealedViewAfterFirstScope(): void
+	{
+		$container = new Container();
+		$container->add('service', stdClass::class);
+		$container->scope();
+		$tag = $container->tag('new-tag');
+
+		$this->assertSame([], $tag->entries());
+		$this->assertSame(false, $tag->has('missing'));
+		$this->assertSame(true, $tag->get('service') instanceof stdClass);
+
+		$this->throws(ContainerException::class, 'sealed');
+		$tag->add('new-entry', stdClass::class);
+	}
+
+	public function testKnownRootTagIsSealedAfterFirstScope(): void
 	{
 		$this->throws(ContainerException::class, 'sealed');
 
 		$container = new Container();
+		$tag = $container->tag('api');
 		$container->scope();
-		$container->tag('new-tag');
+
+		$this->assertSame($tag, $container->tag('api'));
+		$tag->add('new-entry', stdClass::class);
 	}
 
 	public function testScopeTagInheritsRootTagDefinitions(): void

@@ -28,7 +28,7 @@ $container->add(Builder::class)->transient();
 
 ## Scope mode
 
-Use `scope()` to create an isolated container for one unit of work:
+Use `scope()` to create an isolated container for one unit of work, such as an HTTP request in a long-running worker or a job in a queue consumer:
 
 ```php
 $root = new Container();
@@ -43,9 +43,22 @@ $scope->add(Request::class, $request)->value();
 $scope->reset();
 ```
 
-After the first `scope()` call, the root container is sealed and no longer accepts structural mutations. Scope tags can inherit pre-defined root tags while keeping their own local caches.
+Register everything before the first unit of work. The first `scope()` call seals the root: adding entries or tags to it throws afterwards. Reading a tag that was never registered on a sealed root returns an empty, sealed tag container.
 
-Services that should be cleaned between scopes can implement `Celema\Container\Resettable` and will be reset during `$scope->reset()`.
+Lifetimes across scopes:
+
+- Shared entries of the root live as long as the root, so they must not keep per-scope state. They resolve their dependencies in the root's context.
+- Scoped entries get one instance per scope and resolve their dependencies in that scope, so scope-local entries are visible to them.
+- A scoped entry cannot be resolved by the sealed root. That usually means a shared entry depends on it, which would keep the first instance for all later scopes; the container throws a `ContainerException` instead. Make the consumer scoped or transient, or resolve the entry from a scope.
+- A prebuilt object (`$root->add('id', $object)`) is always shared. Register a class name or a closure for a scoped or transient lifetime.
+
+Tags work the same way inside a scope: `$scope->tag('name')` lists the root tag's registrations plus its own, keeps its own scoped instances, and resolves untagged ids through the scope.
+
+### Resetting a scope
+
+Services that should be cleaned up at the end of a scope implement `Celema\Container\Resettable`. `$scope->reset()` calls `reset()` on every resettable instance the scope created or handed out (shared ones included, once each), then clears the scope's instances, local entries and tags, so the scope can be reused. Resetting the root does nothing.
+
+Every reset hook is attempted even if some fail, and the scope is cleared in any case. Failures are reported afterwards as one `Celema\Container\Exception\ResetFailed`, which lists all of them in `$failures` and carries the first as its previous exception.
 
 ## License
 
