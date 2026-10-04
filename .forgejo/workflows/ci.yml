@@ -44,7 +44,10 @@ jobs:
           EVENT: ${{ forgejo.event_name }}
           BEFORE: ${{ forgejo.event.before }}
         run: |
-          set -- --coverage=.infection/coverage --skip-initial-tests
+          # Infection collects its own line coverage instead of reusing the
+          # coverage step's: its JUnit test times are inflated by coverage
+          # collection and would make Infection skip mutants as too slow.
+          set --
           # Pushes mutate only changed lines. New branches and force pushes
           # have no usable base commit and run the full suite, as do
           # scheduled and manual runs.

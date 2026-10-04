@@ -22,11 +22,6 @@
 			<html outputDirectory=".coverage/html"/>
 			<php outputFile=".coverage/coverage.php"/>
 			<text outputFile="php://stdout"/>
-			<!-- Infection reuses the XML coverage and JUnit log from .infection/coverage in CI -->
-			<xml outputDirectory=".infection/coverage/coverage-xml"/>
 		</report>
 	</coverage>
-	<logging>
-		<junit outputFile=".infection/coverage/junit.xml"/>
-	</logging>
 </phpunit>
