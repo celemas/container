@@ -143,6 +143,20 @@ final class ContainerTest extends TestCase
 		$this->assertSame('passed', $instance->test);
 	}
 
+	public function testFactoryMethodInstantiationWithClosureArgs(): void
+	{
+		$container = new Container();
+		$container
+			->add(TestClassContainerArgs::class)
+			->constructor('fromArgs')
+			->args(static fn(): array => ['test' => 'closure', 'app' => 'closure']);
+		$instance = $container->get(TestClassContainerArgs::class);
+
+		$this->assertSame(true, $instance->tc instanceof TestClass);
+		$this->assertSame('closure', $instance->app?->app());
+		$this->assertSame('closure', $instance->test);
+	}
+
 	public function testAutowiredInstantiation(): void
 	{
 		$container = new Container();

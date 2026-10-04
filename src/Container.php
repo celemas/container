@@ -333,8 +333,6 @@ class Container implements PsrContainer
 					// Don't autowire if $args are given
 					if ($args instanceof Closure) {
 						$args = $args(...new CallableResolver($context->creator)->resolve($args));
-
-						return $this->applyCalls($entry, $context->creator->create($value, $args), $context);
 					}
 
 					return $this->applyCalls(

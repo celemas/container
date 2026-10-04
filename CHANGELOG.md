@@ -2,7 +2,9 @@
 
 ## [Unreleased](https://codefloe.com/celema/container/compare/0.6.0...HEAD)
 
-No notable changes since the last release.
+### Fixed
+
+- Entries with closure arguments now use their factory method from `constructor()`. Previously the closure branch ignored it and called `__construct`.
 
 ## [0.6.0](https://codefloe.com/celema/container/src/tag/0.6.0) (2026-10-02)
 
