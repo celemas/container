@@ -228,7 +228,11 @@ final class ScopeLifecycleTest extends TestCase
 
 	public function testPrebuiltObjectsCanOnlyBeShared(): void
 	{
-		$this->throws(ContainerException::class, 'prebuilt object');
+		$this->throws(
+			ContainerException::class,
+			"Entry 'service' is a prebuilt object, which can only be shared. Register a class name "
+				. 'or a closure to create one instance per scope or per resolution.',
+		);
 
 		new Container()->add('service', new stdClass())->scoped();
 	}

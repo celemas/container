@@ -260,7 +260,7 @@ final class ContainerTest extends TestCase
 
 	public function testFailingEntry(): void
 	{
-		$this->throws(NotFoundException::class, 'Unresolvable entry');
+		$this->throws(NotFoundException::class, 'Unresolvable entry - id: missing');
 
 		new Container()->tag('api')->entry('missing');
 	}
@@ -303,9 +303,9 @@ final class ContainerTest extends TestCase
 
 	public function testGettingNonResolvableAutowiringFails(): void
 	{
-		$this->throws(
-			NotFoundException::class,
-			'Unresolvable id: Celema\Container\Tests\Fixtures\TestClassContainerArgs',
+		$this->expectException(NotFoundException::class);
+		$this->expectExceptionMessageMatches(
+			'/^Unresolvable id: Celema\\\\Container\\\\Tests\\\\Fixtures\\\\TestClassContainerArgs - Details: \S/',
 		);
 
 		$container = new Container(autowire: true);
@@ -424,7 +424,10 @@ final class ContainerTest extends TestCase
 
 	public function testRejectMultipleUnnamedArgs(): void
 	{
-		$this->throws(ContainerException::class, 'Container entry arguments');
+		$this->throws(
+			ContainerException::class,
+			'Container entry arguments can be passed as a single associative array, as named arguments, or as a Closure',
+		);
 
 		$container = new Container();
 		$container->add('class', static fn() => new stdClass())->args('chuck', 13);
@@ -432,7 +435,10 @@ final class ContainerTest extends TestCase
 
 	public function testRejectSingleUnnamedArgWithWrongType(): void
 	{
-		$this->throws(ContainerException::class, 'Container entry arguments');
+		$this->throws(
+			ContainerException::class,
+			'Container entry arguments can be passed as a single associative array, as named arguments, or as a Closure',
+		);
 
 		$container = new Container();
 		$container->add('class', static fn() => new stdClass())->args('chuck');
@@ -487,6 +493,42 @@ final class ContainerTest extends TestCase
 		$obj2 = $container->get(stdClass::class);
 
 		$this->assertSame(false, $obj1 === $obj2);
+	}
+
+	public function testScopeSealsRootForAddedEntries(): void
+	{
+		$this->throws(ContainerException::class, 'The root container is sealed after scope() was called');
+
+		$container = new Container();
+		$container->scope();
+		$container->addEntry(new Entry('new-entry', stdClass::class));
+	}
+
+	public function testDisabledAutowiringRejectsUnregisteredClasses(): void
+	{
+		$this->throws(NotFoundException::class, 'Unresolvable id: stdClass');
+
+		new Container(autowire: false)->get(stdClass::class);
+	}
+
+	public function testResetResetsAutowiredScopeServices(): void
+	{
+		$scope = new Container()->scope();
+		$service = $scope->get(ResettableService::class);
+
+		$scope->reset();
+
+		$this->assertSame(1, $service->resetCalls);
+	}
+
+	public function testResetKeepsScopeAsItsOwnContainer(): void
+	{
+		$scope = new Container()->scope();
+
+		$scope->reset();
+
+		$this->assertSame($scope, $scope->get(Container::class));
+		$this->assertSame($scope, $scope->get(ContainerInterface::class));
 	}
 
 	public function testScopeSealsRoot(): void
@@ -766,6 +808,31 @@ final class ContainerTest extends TestCase
 
 		$this->assertSame($tag, $container->tag('api'));
 		$tag->add('new-entry', stdClass::class);
+	}
+
+	public function testScopeTagListsOverriddenEntriesOnce(): void
+	{
+		$container = new Container();
+		$container->tag('api')->add('service', stdClass::class);
+		$container->tag('api')->add('other', stdClass::class);
+		$tag = $container->scope()->tag('api');
+		$tag->add('service', stdClass::class);
+
+		$this->assertSame(['service', 'other'], $tag->entries());
+		$this->assertSame(
+			[ContainerInterface::class, Container::class, 'service', 'other'],
+			$tag->entries(includeContainer: true),
+		);
+	}
+
+	public function testScopeTagEntryPrefersOwnDefinition(): void
+	{
+		$container = new Container();
+		$container->tag('api')->add('service', stdClass::class);
+		$tag = $container->scope()->tag('api');
+		$own = $tag->add('service', stdClass::class);
+
+		$this->assertSame($own, $tag->entry('service'));
 	}
 
 	public function testScopeTagInheritsRootTagDefinitions(): void
