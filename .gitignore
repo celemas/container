@@ -1,4 +1,5 @@
 /.coverage
+/.infection
 /data
 /site
 /tmp
@@ -13,5 +14,6 @@
 .phpunit.result.cache
 __pycache__
 composer.lock
+infection.json5
 phpunit.xml
 psalm.xml
