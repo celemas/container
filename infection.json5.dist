@@ -72,11 +72,6 @@
 		MethodCallRemoval: {
 			ignoreSourceCodeByRegex: ['\\$this->resetIfNeeded\\(\\$instance, \\$resetIds, \\$failures\\);'],
 		},
-		// Scope tags are always scopes; the guard only matters for injected
-		// state, where skipping and stopping behave the same for a single tag.
-		Continue_: {
-			ignore: ['Celema\\Container\\Container::resetScope'],
-		},
 		// A single argument is handled by the preceding branch.
 		GreaterThan: {
 			ignore: ['Celema\\Container\\Entry::args'],

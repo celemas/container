@@ -412,11 +412,8 @@ class Container implements PsrContainer
 			$this->resetIfNeeded($usedResettable, $resetIds, $failures);
 		}
 
+		// A scope's tags inherit isScope from it, so all of them are scopes.
 		foreach ($this->tags as $tagContainer) {
-			if (!$tagContainer->isScope) {
-				continue;
-			}
-
 			$tagContainer->resetScope($resetIds, $failures);
 		}
 

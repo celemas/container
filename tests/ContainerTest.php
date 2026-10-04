@@ -17,7 +17,6 @@ use Celema\Container\Tests\Fixtures\TestClassWithConstructor;
 use Celema\Container\Tests\Fixtures\TestContainer;
 use Closure;
 use Psr\Container\ContainerInterface;
-use ReflectionProperty;
 use RuntimeException;
 use stdClass;
 
@@ -713,21 +712,6 @@ final class ContainerTest extends TestCase
 		$container->reset();
 
 		$this->assertSame(true, $container->has('service'));
-	}
-
-	public function testResetSkipsNonScopeTagsInScopeTagMap(): void
-	{
-		$container = new Container();
-		$rootTag = $container->tag('api');
-		$rootTag->add('shared', 'root')->value();
-		$scope = $container->scope();
-		$tagsProperty = new ReflectionProperty(Container::class, 'tags');
-		$scopeTags = ['injected-root-tag' => $rootTag];
-		$tagsProperty->setValue($scope, $scopeTags);
-
-		$scope->reset();
-
-		$this->assertSame('root', $rootTag->get('shared'));
 	}
 
 	public function testFetchEntriesList(): void
