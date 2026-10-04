@@ -9,10 +9,77 @@
 		html: '.infection/infection.html',
 		summary: '.infection/summary.log',
 	},
+	// Ratchet: raise these with the reached score, never lower them.
+	minMsi: 99,
+	minCoveredMsi: 99,
 	// CI mutates only the lines changed by a push; pushes without source
 	// changes produce no mutants and must not fail the threshold.
 	ignoreMsiWithNoMutations: true,
+	// Ignores below cover equivalent mutants: they change no observable behavior.
+	// Keep them scoped to a method so that new code elsewhere is still mutated.
+	// Where a method also has killed mutants of the same kind, match the source
+	// line by regex instead (`ignoreSourceCodeByRegex` applies to the removed
+	// diff lines across the whole codebase). Avoid `Class::method::line` pins:
+	// unrelated edits that move the line break the run.
 	mutators: {
 		'@default': true,
+
+		// `?->` inside isset() and `??` is redundant: both already tolerate a
+		// null object.
+		NullSafePropertyCall: {
+			ignore: [
+				'Celema\\Container\\Container::has',
+				'Celema\\Container\\Container::entry',
+			],
+		},
+		TrueValue: {
+			ignore: [
+				// The container's own entries already list the container keys.
+				'Celema\\Container\\Container::entries',
+				// isset() treats any non-null marker as seen.
+				'Celema\\Container\\Container::resetIfNeeded',
+			],
+		},
+		// Fast path for cached instances; resolution returns the same cached instance.
+		ReturnRemoval: {
+			ignoreSourceCodeByRegex: ['return \\$this->trackAndReturn\\(\\$this->instances\\[\\$id\\]\\);'],
+		},
+		// Extension points for subclasses; the library itself does not subclass.
+		ProtectedVisibility: {
+			ignore: [
+				'Celema\\Container\\Container::resolveEntry',
+				'Celema\\Container\\Container::resolutionContainers',
+				'Celema\\Container\\Container::materialize',
+				'Celema\\Container\\Container::applyCalls',
+				'Celema\\Container\\Container::resetScope',
+				'Celema\\Container\\Container::resetIfNeeded',
+				'Celema\\Container\\Container::trackAndReturn',
+				'Celema\\Container\\Container::findEntry',
+				'Celema\\Container\\Container::root',
+				'Celema\\Container\\Container::assertMutable',
+				'Celema\\Container\\Container::seal',
+			],
+		},
+		// String concatenation converts the scalar anyway.
+		CastString: {
+			ignore: ['Celema\\Container\\Container::materialize'],
+		},
+		// Every resettable a scope cached was returned through its get() and is
+		// tracked in usedResettables, which resetScope() resets as well.
+		Foreach_: {
+			ignoreSourceCodeByRegex: ['foreach \\(\\$this->instances as \\$instance\\) \\{'],
+		},
+		MethodCallRemoval: {
+			ignoreSourceCodeByRegex: ['\\$this->resetIfNeeded\\(\\$instance, \\$resetIds, \\$failures\\);'],
+		},
+		// Scope tags are always scopes; the guard only matters for injected
+		// state, where skipping and stopping behave the same for a single tag.
+		Continue_: {
+			ignore: ['Celema\\Container\\Container::resetScope'],
+		},
+		// A single argument is handled by the preceding branch.
+		GreaterThan: {
+			ignore: ['Celema\\Container\\Entry::args'],
+		},
 	},
 }
