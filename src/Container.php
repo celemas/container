@@ -399,10 +399,14 @@ class Container implements PsrContainer
 	protected function applyCalls(Entry $entry, mixed $value, Container $context): mixed
 	{
 		foreach ($entry->getCalls() as $call) {
-			$methodToResolve = $call->method;
+			$callable = [$value, $call->method];
 
-			/** @var callable */
-			$callable = [$value, $methodToResolve];
+			if (!is_callable($callable)) {
+				throw new ContainerException(
+					"Entry '{$entry->id}' cannot call {$call->method}() on " . get_debug_type($value),
+				);
+			}
+
 			$args = new CallableResolver($context->creator)->resolve($callable, $call->args);
 			$callable(...$args);
 		}

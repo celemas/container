@@ -95,6 +95,27 @@ final class ContainerTest extends TestCase
 		$this->assertSame('testvalue', $tc->value);
 	}
 
+	public function testRejectCallOfMissingMethod(): void
+	{
+		$this->throws(
+			ContainerException::class,
+			"Entry 'class' cannot call missing() on Celema\\Container\\Tests\\Fixtures\\TestClass",
+		);
+
+		$container = new Container();
+		$container->add('class', TestClass::class)->call('missing');
+		$container->get('class');
+	}
+
+	public function testRejectCallOnNonObject(): void
+	{
+		$this->throws(ContainerException::class, "Entry 'number' cannot call init() on int");
+
+		$container = new Container();
+		$container->add('number', static fn(): int => 13)->call('init');
+		$container->get('number');
+	}
+
 	public function testChainedInstantiation(): void
 	{
 		$container = new Container();

@@ -12,6 +12,7 @@
 
 ### Fixed
 
+- A `call()` on an entry whose resolved value has no such callable method throws a `ContainerException` naming the entry, the method, and the value's type, instead of a message from the failed closure conversion.
 - An args closure that does not return an array throws a `ContainerException` naming the entry. Previously the PHP `TypeError` from using its result surfaced in the message.
 - Resolving an entry whose definition is neither a string, a closure, nor an object, such as an array registered without `value()`, throws a `NotFoundException` naming the entry id and the definition's type. Previously the definition was cast to a string, which raised an "Array to string conversion" warning for arrays.
 
