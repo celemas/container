@@ -251,6 +251,7 @@ class Container implements PsrContainer
 				}
 
 				if (class_exists($value)) {
+					// Psalm cannot know the constructor of a class named at runtime.
 					/** @psalm-suppress MixedMethodCall */
 					return new $value(...$args);
 				}
@@ -258,6 +259,7 @@ class Container implements PsrContainer
 		}
 
 		if (class_exists($id)) {
+			// Psalm cannot know the constructor of a class named at runtime.
 			/** @psalm-suppress MixedMethodCall */
 			return new $id(...$args);
 		}
