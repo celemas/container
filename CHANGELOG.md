@@ -2,7 +2,9 @@
 
 ## [Unreleased](https://codefloe.com/celema/container/compare/0.6.1...HEAD)
 
-No notable changes since the last release.
+### Breaking Changes
+
+- Require `celema/wire` 0.9. Resolving an entry whose `args()` target a class without a constructor throws a `NotFoundException` instead of silently dropping the arguments.
 
 ## [0.6.1](https://codefloe.com/celema/container/src/tag/0.6.1) (2026-10-06)
 
