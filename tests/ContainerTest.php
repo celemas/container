@@ -50,7 +50,7 @@ final class ContainerTest extends TestCase
 		$obj1 = $container->get(stdClass::class);
 		$obj2 = $container->get(stdClass::class);
 
-		$this->assertSame(true, $obj1 instanceof stdClass);
+		$this->assertInstanceOf(stdClass::class, $obj1);
 		$this->assertSame(stdClass::class, $container->entry(stdClass::class)->definition());
 		$this->assertSame($obj1, $obj2);
 	}
@@ -82,8 +82,8 @@ final class ContainerTest extends TestCase
 		$con = $container->new('container');
 		$test = $container->new('test');
 
-		$this->assertSame(true, $con instanceof Container);
-		$this->assertSame(true, $test instanceof TestClass);
+		$this->assertInstanceOf(Container::class, $con);
+		$this->assertInstanceOf(TestClass::class, $test);
 	}
 
 	public function testInstantiateWithCall(): void
@@ -92,7 +92,7 @@ final class ContainerTest extends TestCase
 		$container->add(TestClass::class)->call('init', value: 'testvalue');
 		$tc = $container->get(TestClass::class);
 
-		$this->assertSame(true, $tc instanceof TestClass);
+		$this->assertInstanceOf(TestClass::class, $tc);
 		$this->assertSame('testvalue', $tc->value);
 	}
 
@@ -134,7 +134,7 @@ final class ContainerTest extends TestCase
 			13,
 		);
 
-		$this->assertSame(true, $exception instanceof NotFoundException);
+		$this->assertInstanceOf(NotFoundException::class, $exception);
 		$this->assertSame('The message', $exception->getMessage());
 		$this->assertSame(13, $exception->getCode());
 	}
@@ -145,8 +145,8 @@ final class ContainerTest extends TestCase
 		$container->add(TestClassContainerArgs::class)->constructor('fromDefaults');
 		$instance = $container->get(TestClassContainerArgs::class);
 
-		$this->assertSame(true, $instance->tc instanceof TestClass);
-		$this->assertSame(true, $instance->app instanceof TestClassApp);
+		$this->assertInstanceOf(TestClass::class, $instance->tc);
+		$this->assertInstanceOf(TestClassApp::class, $instance->app);
 		$this->assertSame('fromDefaults', $instance->app->app());
 		$this->assertSame('fromDefaults', $instance->test);
 	}
@@ -160,8 +160,8 @@ final class ContainerTest extends TestCase
 			->args(test: 'passed', app: 'passed');
 		$instance = $container->get(TestClassContainerArgs::class);
 
-		$this->assertSame(true, $instance->tc instanceof TestClass);
-		$this->assertSame(true, $instance->app instanceof TestClassApp);
+		$this->assertInstanceOf(TestClass::class, $instance->tc);
+		$this->assertInstanceOf(TestClassApp::class, $instance->app);
 		$this->assertSame('passed', $instance->app->app());
 		$this->assertSame('passed', $instance->test);
 	}
@@ -175,7 +175,7 @@ final class ContainerTest extends TestCase
 			->args(static fn(): array => ['test' => 'closure', 'app' => 'closure']);
 		$instance = $container->get(TestClassContainerArgs::class);
 
-		$this->assertSame(true, $instance->tc instanceof TestClass);
+		$this->assertInstanceOf(TestClass::class, $instance->tc);
 		$this->assertSame('closure', $instance->app?->app());
 		$this->assertSame('closure', $instance->test);
 	}
@@ -184,7 +184,7 @@ final class ContainerTest extends TestCase
 	{
 		$container = new Container();
 
-		$this->assertSame(true, $container->new(NotFoundException::class) instanceof NotFoundException);
+		$this->assertInstanceOf(NotFoundException::class, $container->new(NotFoundException::class));
 	}
 
 	public function testAutowiredInstantiationFails(): void
@@ -196,7 +196,7 @@ final class ContainerTest extends TestCase
 
 		$container = new Container();
 
-		$this->assertSame(true, $container->new(NoValidClass::class) instanceof NotFoundException);
+		$this->assertInstanceOf(NotFoundException::class, $container->new(NoValidClass::class));
 	}
 
 	public function testResolveInstance(): void
@@ -213,7 +213,7 @@ final class ContainerTest extends TestCase
 		$container = new Container();
 		$container->add('class', stdClass::class);
 
-		$this->assertSame(true, $container->get('class') instanceof stdClass);
+		$this->assertInstanceOf(stdClass::class, $container->get('class'));
 	}
 
 	public function testInstanceReturnsAutowiredClass(): void
@@ -255,9 +255,9 @@ final class ContainerTest extends TestCase
 			NotFoundException::class,
 		);
 
-		$this->assertSame(
-			true,
-			$container->get(\Psr\Container\ContainerExceptionInterface::class) instanceof NotFoundException,
+		$this->assertInstanceOf(
+			NotFoundException::class,
+			$container->get(\Psr\Container\ContainerExceptionInterface::class),
 		);
 	}
 
@@ -281,8 +281,8 @@ final class ContainerTest extends TestCase
 		);
 		$instance = $container->get('class');
 
-		$this->assertSame(true, $instance->tc instanceof TestClass);
-		$this->assertSame(true, $instance->app instanceof TestClassApp);
+		$this->assertInstanceOf(TestClass::class, $instance->tc);
+		$this->assertInstanceOf(TestClassApp::class, $instance->app);
 		$this->assertSame('chuck', $instance->test);
 	}
 
@@ -405,8 +405,8 @@ final class ContainerTest extends TestCase
 		]);
 		$instance = $container->get('class');
 
-		$this->assertSame(true, $instance instanceof TestClassContainerArgs);
-		$this->assertSame(true, $instance->tc instanceof TestClass);
+		$this->assertInstanceOf(TestClassContainerArgs::class, $instance);
+		$this->assertInstanceOf(TestClass::class, $instance->tc);
 		$this->assertSame('chuck', $instance->test);
 	}
 
@@ -418,7 +418,7 @@ final class ContainerTest extends TestCase
 		);
 		$instance = $container->get('class');
 
-		$this->assertSame(true, $instance instanceof TestClassContainerSingleArg);
+		$this->assertInstanceOf(TestClassContainerSingleArg::class, $instance);
 		$this->assertSame('chuck', $instance->test);
 	}
 
@@ -431,8 +431,8 @@ final class ContainerTest extends TestCase
 		);
 		$instance = $container->get('class');
 
-		$this->assertSame(true, $instance instanceof TestClassContainerArgs);
-		$this->assertSame(true, $instance->tc instanceof TestClass);
+		$this->assertInstanceOf(TestClassContainerArgs::class, $instance);
+		$this->assertInstanceOf(TestClass::class, $instance->tc);
 		$this->assertSame('chuck', $instance->test);
 	}
 
@@ -451,8 +451,8 @@ final class ContainerTest extends TestCase
 			->args(app: new TestClassApp('chuck'), tc: new TestClass(), name: 'chuck');
 		$instance = $container->get('class');
 
-		$this->assertSame(true, $instance->tc instanceof TestClass);
-		$this->assertSame(true, $instance->app instanceof TestClassApp);
+		$this->assertInstanceOf(TestClass::class, $instance->tc);
+		$this->assertInstanceOf(TestClassApp::class, $instance->app);
 		$this->assertSame('chuck', $instance->test);
 	}
 
@@ -467,9 +467,9 @@ final class ContainerTest extends TestCase
 		]);
 		$instance = $container->get('class');
 
-		$this->assertSame(true, $instance instanceof TestClassContainerArgs);
-		$this->assertSame(true, $instance->tc instanceof TestClass);
-		$this->assertSame(true, $instance->app instanceof TestClassApp);
+		$this->assertInstanceOf(TestClassContainerArgs::class, $instance);
+		$this->assertInstanceOf(TestClass::class, $instance->tc);
+		$this->assertInstanceOf(TestClassApp::class, $instance->app);
 		$this->assertSame('chuck', $instance->test);
 	}
 
@@ -491,9 +491,9 @@ final class ContainerTest extends TestCase
 			]);
 		$instance = $container->get('class');
 
-		$this->assertSame(true, $instance instanceof TestClassContainerArgs);
-		$this->assertSame(true, $instance->tc instanceof TestClass);
-		$this->assertSame(true, $instance->app instanceof TestClassApp);
+		$this->assertInstanceOf(TestClassContainerArgs::class, $instance);
+		$this->assertInstanceOf(TestClass::class, $instance->tc);
+		$this->assertInstanceOf(TestClassApp::class, $instance->app);
 		$this->assertSame('chuck', $instance->test);
 	}
 
@@ -564,7 +564,7 @@ final class ContainerTest extends TestCase
 		$value2 = $container->get('closure2');
 
 		$this->assertSame('called', $value1);
-		$this->assertSame(true, $value2 instanceof Closure);
+		$this->assertInstanceOf(Closure::class, $value2);
 	}
 
 	public function testTransientLifetimeReturnsFreshInstances(): void
@@ -847,7 +847,7 @@ final class ContainerTest extends TestCase
 			],
 			$container->tag('tag')->entries(true),
 		);
-		$this->assertSame(true, $obj instanceof stdClass);
+		$this->assertInstanceOf(stdClass::class, $obj);
 		$this->assertSame(stdClass::class, $entry->definition());
 		$this->assertSame(Container::class, $entryCon->definition());
 		$this->assertSame(true, $obj === $container->tag('tag')->get('class'));
@@ -878,7 +878,7 @@ final class ContainerTest extends TestCase
 
 		$this->assertSame([], $tag->entries());
 		$this->assertSame(false, $tag->has('missing'));
-		$this->assertSame(true, $tag->get('service') instanceof stdClass);
+		$this->assertInstanceOf(stdClass::class, $tag->get('service'));
 
 		$this->throws(ContainerException::class, 'sealed');
 		$tag->add('new-entry', stdClass::class);
@@ -933,7 +933,7 @@ final class ContainerTest extends TestCase
 		$service1 = $tag->get('service');
 		$service2 = $tag->get('service');
 
-		$this->assertSame(true, $service1 instanceof stdClass);
+		$this->assertInstanceOf(stdClass::class, $service1);
 		$this->assertSame(true, $service1 === $service2);
 	}
 
@@ -959,9 +959,9 @@ final class ContainerTest extends TestCase
 		$container = new Container(container: $testContainer);
 		$container->add('internal', new Container());
 
-		$this->assertSame(true, $container->get('external') instanceof stdClass);
-		$this->assertSame(true, $container->get('internal') instanceof Container);
-		$this->assertSame(true, $container->get(ContainerInterface::class) instanceof TestContainer);
+		$this->assertInstanceOf(stdClass::class, $container->get('external'));
+		$this->assertInstanceOf(Container::class, $container->get('internal'));
+		$this->assertInstanceOf(TestContainer::class, $container->get(ContainerInterface::class));
 		$this->assertSame($testContainer, $container->get(ContainerInterface::class));
 		$this->assertSame($testContainer, $container->get(TestContainer::class));
 	}
