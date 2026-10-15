@@ -6,8 +6,13 @@
 
 - Require `celema/wire` 0.9. Resolving an entry whose `args()` target a class without a constructor throws a `NotFoundException` instead of silently dropping the arguments.
 
+### Changed
+
+- `Entry::getArgs()` declares an args closure as a plain `Closure` instead of `Closure(mixed...): array`. The return type was never checked before the closure ran.
+
 ### Fixed
 
+- An args closure that does not return an array throws a `ContainerException` naming the entry. Previously the PHP `TypeError` from using its result surfaced in the message.
 - Resolving an entry whose definition is neither a string, a closure, nor an object, such as an array registered without `value()`, throws a `NotFoundException` naming the entry id and the definition's type. Previously the definition was cast to a string, which raised an "Array to string conversion" warning for arrays.
 
 ## [0.6.1](https://codefloe.com/celema/container/src/tag/0.6.1) (2026-10-06)

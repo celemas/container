@@ -332,7 +332,10 @@ class Container implements PsrContainer
 				if (isset($args)) {
 					// Don't autowire if $args are given
 					if ($args instanceof Closure) {
-						$args = $args(...new CallableResolver($context->creator)->resolve($args));
+						$args = self::checkedArgs(
+							$entry,
+							$args(...new CallableResolver($context->creator)->resolve($args)),
+						);
 					}
 
 					return $this->applyCalls(
@@ -366,7 +369,7 @@ class Container implements PsrContainer
 			if (is_null($args)) {
 				$args = new CallableResolver($context->creator)->resolve($value);
 			} elseif ($args instanceof Closure) {
-				$args = $args();
+				$args = self::checkedArgs($entry, $args());
 			}
 
 			return $this->applyCalls($entry, $value(...$args), $context);
@@ -379,6 +382,18 @@ class Container implements PsrContainer
 		throw new NotFoundException(
 			"Unresolvable id: {$entry->id} - cannot resolve a definition of type " . get_debug_type($value),
 		);
+	}
+
+	/** @return array<array-key, mixed> */
+	private static function checkedArgs(Entry $entry, mixed $args): array
+	{
+		if (!is_array($args)) {
+			throw new ContainerException(
+				"The args closure of entry '{$entry->id}' must return an array, " . get_debug_type($args) . ' returned',
+			);
+		}
+
+		return $args;
 	}
 
 	protected function applyCalls(Entry $entry, mixed $value, Container $context): mixed

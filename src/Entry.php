@@ -11,7 +11,7 @@ use Closure;
 /** @psalm-api */
 class Entry
 {
-	/** @var array<array-key, mixed>|Closure(mixed...): array<array-key, mixed>|null */
+	/** @var array<array-key, mixed>|Closure|null */
 	protected array|Closure|null $args = null;
 
 	protected ?string $constructor = null;
@@ -83,7 +83,6 @@ class Entry
 			if (is_string(array_key_first($args))) {
 				$this->args = $args;
 			} elseif (is_array($args[0]) || $args[0] instanceof Closure) {
-				/** @var array<array-key, mixed>|Closure(mixed...): array<array-key, mixed> */
 				$this->args = $args[0];
 			} else {
 				throw new ContainerException(
@@ -105,7 +104,7 @@ class Entry
 		return $this;
 	}
 
-	/** @return array<array-key, mixed>|Closure(mixed...): array<array-key, mixed>|null */
+	/** @return array<array-key, mixed>|Closure|null */
 	public function getArgs(): array|Closure|null
 	{
 		return $this->args;

@@ -448,6 +448,32 @@ final class ContainerTest extends TestCase
 		$this->assertSame('chuck', $instance->test);
 	}
 
+	public function testRejectArgsClosureNotReturningArray(): void
+	{
+		$this->throws(
+			ContainerException::class,
+			"The args closure of entry 'class' must return an array, string returned",
+		);
+
+		$container = new Container();
+		$container->add('class', TestClassContainerSingleArg::class)->args(static fn() => 'chuck');
+		$container->get('class');
+	}
+
+	public function testRejectClosureEntryArgsClosureNotReturningArray(): void
+	{
+		$this->throws(
+			ContainerException::class,
+			"The args closure of entry 'closure' must return an array, null returned",
+		);
+
+		$container = new Container();
+		$container->add('closure', static fn(string $test) => new TestClassContainerSingleArg($test))->args(
+			static fn() => null,
+		);
+		$container->get('closure');
+	}
+
 	public function testRejectMultipleUnnamedArgs(): void
 	{
 		$this->throws(
