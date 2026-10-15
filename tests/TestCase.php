@@ -6,6 +6,7 @@ namespace Celema\Container\Tests;
 
 use Celema\Container\Container;
 use PHPUnit\Framework\TestCase as BaseTestCase;
+use Throwable;
 
 /**
  * @internal
@@ -23,11 +24,12 @@ class TestCase extends BaseTestCase
 		return $container;
 	}
 
+	/** @param class-string<Throwable> $exception */
 	public function throws(string $exception, ?string $message = null): void
 	{
 		$this->expectException($exception);
 
-		if ($message) {
+		if ($message !== null) {
 			$this->expectExceptionMessage($message);
 		}
 	}

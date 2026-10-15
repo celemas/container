@@ -112,7 +112,8 @@ class Container implements PsrContainer
 
 		return array_values(array_filter(
 			$keys,
-			static fn($item) => $item !== PsrContainer::class && !is_subclass_of($item, PsrContainer::class),
+			static fn(string $item): bool => $item !== PsrContainer::class
+			&& !is_subclass_of($item, PsrContainer::class),
 		));
 	}
 

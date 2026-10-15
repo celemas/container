@@ -10,6 +10,7 @@ use Psr\Container\NotFoundExceptionInterface as NotFoundException;
 
 class TestContainer implements ContainerInterface
 {
+	/** @var array<string, mixed> */
 	protected array $entries = [];
 
 	public function add(string $id, mixed $entry = null): void
