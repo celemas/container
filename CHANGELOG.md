@@ -6,6 +6,10 @@
 
 - Require `celema/wire` 0.9. Resolving an entry whose `args()` target a class without a constructor throws a `NotFoundException` instead of silently dropping the arguments.
 
+### Added
+
+- `Container::instance()` resolves a class or interface id with its type declared for static analyzers (`class-string<T>` to `T`). It throws a `ContainerException` if the entry resolves to anything other than an instance of that type.
+
 ### Changed
 
 - `Entry::getArgs()` declares an args closure as a plain `Closure` instead of `Closure(mixed...): array`. The return type was never checked before the closure ran.

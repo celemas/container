@@ -21,3 +21,6 @@ $value = $container->get(Value::class);
 
 assert($value instanceof Value);
 assert($value->get() === 'string');
+
+// instance() checks the type, and static analyzers know it.
+assert($container->instance(Value::class)->get() === 'string');

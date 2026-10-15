@@ -10,6 +10,14 @@
 
 A PSR-11 compatible dependency injection container.
 
+## Resolving entries
+
+`get($id)` implements PSR-11 and returns `mixed`. To resolve a class or interface with its type known to static analyzers, use `instance()`. It throws a `ContainerException` if the entry resolves to anything other than an instance of the requested type.
+
+```php
+$logger = $container->instance(LoggerInterface::class);
+```
+
 ## Entry lifetimes
 
 Container entries use explicit lifetimes:

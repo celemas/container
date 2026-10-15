@@ -182,6 +182,25 @@ class Container implements PsrContainer
 	}
 
 	/**
+	 * @template T of object
+	 * @param class-string<T> $class
+	 * @return T
+	 */
+	public function instance(string $class): object
+	{
+		/** @var mixed $value */
+		$value = $this->get($class);
+
+		if (!$value instanceof $class) {
+			throw new ContainerException(
+				"Entry '{$class}' resolves to " . get_debug_type($value) . ', not an instance of it',
+			);
+		}
+
+		return $value;
+	}
+
+	/**
 	 * @param non-empty-string $id
 	 */
 	public function add(

@@ -15,6 +15,7 @@ use Celema\Container\Tests\Fixtures\TestClassContainerArgs;
 use Celema\Container\Tests\Fixtures\TestClassContainerSingleArg;
 use Celema\Container\Tests\Fixtures\TestClassWithConstructor;
 use Celema\Container\Tests\Fixtures\TestContainer;
+use Celema\Container\Tests\Fixtures\TestInterface;
 use Closure;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -213,6 +214,33 @@ final class ContainerTest extends TestCase
 		$container->add('class', stdClass::class);
 
 		$this->assertSame(true, $container->get('class') instanceof stdClass);
+	}
+
+	public function testInstanceReturnsAutowiredClass(): void
+	{
+		$container = new Container();
+
+		$this->assertSame('chuck', $container->instance(TestClassApp::class)->app());
+	}
+
+	public function testInstanceReturnsEntryOfInterface(): void
+	{
+		$container = new Container();
+		$container->add(TestInterface::class, TestClass::class);
+
+		$this->assertInstanceOf(TestClass::class, $container->instance(TestInterface::class));
+	}
+
+	public function testInstanceRejectsEntryOfOtherType(): void
+	{
+		$this->throws(
+			ContainerException::class,
+			"Entry 'Celema\\Container\\Tests\\Fixtures\\TestClass' resolves to string, not an instance of it",
+		);
+
+		$container = new Container();
+		$container->add(TestClass::class, 'chuck')->value();
+		$container->instance(TestClass::class);
 	}
 
 	public function testResolveChainedEntry(): void
