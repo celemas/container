@@ -18,6 +18,7 @@ use Celema\Container\Tests\Fixtures\TestContainer;
 use Closure;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use SplHeap;
 use stdClass;
 
 final class ContainerTest extends TestCase
@@ -197,17 +198,17 @@ final class ContainerTest extends TestCase
 	{
 		$container = new Container();
 		$container->add(
-			Psr\Container\ContainerExceptionInterface::class,
-			Psr\Container\NotFoundExceptionInterface::class,
+			\Psr\Container\ContainerExceptionInterface::class,
+			\Psr\Container\NotFoundExceptionInterface::class,
 		);
 		$container->add(
-			Psr\Container\NotFoundExceptionInterface::class,
+			\Psr\Container\NotFoundExceptionInterface::class,
 			NotFoundException::class,
 		);
 
 		$this->assertSame(
 			true,
-			$container->get(Psr\Container\ContainerExceptionInterface::class) instanceof NotFoundException,
+			$container->get(\Psr\Container\ContainerExceptionInterface::class) instanceof NotFoundException,
 		);
 	}
 
@@ -280,10 +281,13 @@ final class ContainerTest extends TestCase
 
 	public function testRejectUnresolvableClass(): void
 	{
-		$this->throws(ContainerException::class, 'Unresolvable');
+		$this->throws(
+			NotFoundException::class,
+			'Unresolvable id: SplHeap - Details: Unresolvable: SplHeap cannot be instantiated',
+		);
 
 		$container = new Container();
-		$container->get(GdImage::class);
+		$container->get(SplHeap::class);
 	}
 
 	public function testGetWrapsUnexpectedThrowableInContainerException(): void
