@@ -318,6 +318,15 @@ final class ContainerTest extends TestCase
 		$container->get('unresolvable');
 	}
 
+	public function testGettingEntryWithUnresolvableDefinitionTypeFails(): void
+	{
+		$this->throws(NotFoundException::class, 'Unresolvable id: config - cannot resolve a definition of type array');
+
+		$container = new Container();
+		$container->add('config', ['debug' => true]);
+		$container->get('config');
+	}
+
 	public function testGettingNonResolvableAutowiringFails(): void
 	{
 		$this->expectException(NotFoundException::class);

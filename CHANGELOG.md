@@ -6,6 +6,10 @@
 
 - Require `celema/wire` 0.9. Resolving an entry whose `args()` target a class without a constructor throws a `NotFoundException` instead of silently dropping the arguments.
 
+### Fixed
+
+- Resolving an entry whose definition is neither a string, a closure, nor an object, such as an array registered without `value()`, throws a `NotFoundException` naming the entry id and the definition's type. Previously the definition was cast to a string, which raised an "Array to string conversion" warning for arrays.
+
 ## [0.6.1](https://codefloe.com/celema/container/src/tag/0.6.1) (2026-10-06)
 
 ### Fixed

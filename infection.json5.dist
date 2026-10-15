@@ -60,10 +60,6 @@
 				'Celema\\Container\\Container::seal',
 			],
 		},
-		// String concatenation converts the scalar anyway.
-		CastString: {
-			ignore: ['Celema\\Container\\Container::materialize'],
-		},
 		// Every resettable a scope cached was returned through its get() and is
 		// tracked in usedResettables, which resetScope() resets as well.
 		Foreach_: {

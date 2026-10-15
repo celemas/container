@@ -356,6 +356,8 @@ class Container implements PsrContainer
 			if ($context->has($value)) {
 				return $context->get($value);
 			}
+
+			throw new NotFoundException('Unresolvable id: ' . $value);
 		}
 
 		if ($value instanceof Closure) {
@@ -374,7 +376,9 @@ class Container implements PsrContainer
 			return $value;
 		}
 
-		throw new NotFoundException('Unresolvable id: ' . (string) $value);
+		throw new NotFoundException(
+			"Unresolvable id: {$entry->id} - cannot resolve a definition of type " . get_debug_type($value),
+		);
 	}
 
 	protected function applyCalls(Entry $entry, mixed $value, Container $context): mixed
